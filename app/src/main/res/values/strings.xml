@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">RestJet</string>
+    <string name="fab__add_content_description">Add</string>
+</resources>
