@@ -1,11 +1,9 @@
 package com.sapan.restjet.ui.compose
 
-import android.widget.ImageButton
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -25,9 +23,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.sapan.restjet.R
+import com.sapan.restjet.screen.Route
 import com.sapan.restjet.ui.theme.Typography
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -70,9 +68,6 @@ fun AppBar(
     )
 }
 
-private val BOTTOM_NAVIGATION_COLLECTION = "Collection"
-private val BOTTOM_NAVIGATION_HOME = "Home"
-
 @Composable
 fun BottomNavigationBar(
     selectedItem: String,
@@ -84,48 +79,28 @@ fun BottomNavigationBar(
     ) {
         NavigationBarItem(
             onClick = {
-                onSelectedItem(BOTTOM_NAVIGATION_HOME)
+                onSelectedItem(Route.Home.route)
             },
-            selected = selectedItem == BOTTOM_NAVIGATION_HOME,
+            selected = selectedItem == Route.Home.route,
             icon = {
                 Icon(imageVector = Icons.Default.Home, contentDescription = null)
             },
             label = {
-                Text(text = BOTTOM_NAVIGATION_HOME)
+                Text(text = Route.Home.route)
             }
         )
 
         NavigationBarItem(
             onClick = {
-                onSelectedItem(BOTTOM_NAVIGATION_COLLECTION)
+                onSelectedItem(Route.Collection.route)
             },
-            selected = selectedItem == BOTTOM_NAVIGATION_COLLECTION,
+            selected = selectedItem == Route.Collection.route,
             icon = {
                 Icon(imageVector = Icons.Default.Star, contentDescription = null)
             },
             label = {
-                Text(text = BOTTOM_NAVIGATION_COLLECTION)
+                Text(text = Route.Collection.route)
             }
         )
     }
-}
-
-
-@Preview
-@Composable
-fun NavigationBarPreview() {
-    BottomNavigationBar(
-        selectedItem = BOTTOM_NAVIGATION_HOME,
-        onSelectedItem = {}
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun AppBarPreview() {
-    AppBar(
-        onNavigationClick = {},
-        onAvatarClick = {},
-        modifier = Modifier.padding(start = 8.dp, end = 8.dp)
-    )
 }

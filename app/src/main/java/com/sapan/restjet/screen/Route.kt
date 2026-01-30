@@ -9,4 +9,10 @@ sealed class Route(val route: String) {
 
     @Serializable
     data object Collection: Route("Collection")
+
+    val title: String
+        get() = when(this) {
+            is Home -> "Rest Jet"
+            is Collection -> "Collection"
+        }
 }

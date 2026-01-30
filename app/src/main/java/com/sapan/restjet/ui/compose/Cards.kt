@@ -1,6 +1,5 @@
 package com.sapan.restjet.ui.compose
 
-import android.widget.TextView
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,7 +14,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -26,7 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.sapan.restjet.data.CollectionInfo
+import com.sapan.restjet.data.CollectionData
 import com.sapan.restjet.ui.theme.Typography
 import com.sapan.restjet.ui.theme.card_content_gap
 import com.sapan.restjet.ui.theme.card_corner_radius
@@ -45,7 +43,7 @@ fun IconStar() {
 }
 @Composable
 fun CollectionCard(
-    collectionInfo: CollectionInfo = CollectionInfo("header", "description")
+    collectionInfo: CollectionData = CollectionData("header", "description")
 ) {
     Card(
         modifier = Modifier.padding(card_content_gap).fillMaxWidth(),

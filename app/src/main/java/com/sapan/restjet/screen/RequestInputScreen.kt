@@ -20,33 +20,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.sapan.restjet.ui.compose.Action
-import com.sapan.restjet.ui.compose.ButtonContent
+import com.sapan.restjet.data.buttons
 import com.sapan.restjet.ui.compose.ButtonDefault
 import com.sapan.restjet.ui.compose.ConnectedButtonGroup
 import com.sapan.restjet.ui.compose.TextInputField
 import com.sapan.restjet.ui.theme.Typography
-
-val buttons = listOf(
-    ButtonContent(
-        action = Action.ADD_QUERY_PARAM,
-        text = "Action",
-        icon = Icons.Default.ArrowDropDown,
-        iconContentDescription = "button1"
-    ),
-    ButtonContent(
-        action = Action.SELECT_REQUEST_TYPE,
-        text = "Header",
-        icon = Icons.Default.Add,
-        iconContentDescription = "button2"
-    ),
-    ButtonContent(
-        action = Action.ADD_HEADER,
-        text = "Params",
-        icon = Icons.Default.Add,
-        iconContentDescription = "button3"
-    ),
-)
 
 @Composable
 fun RequestInputScreen(

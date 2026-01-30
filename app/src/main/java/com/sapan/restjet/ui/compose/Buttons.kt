@@ -1,18 +1,28 @@
 package com.sapan.restjet.ui.compose
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -20,6 +30,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -27,6 +38,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
@@ -35,45 +47,31 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.sapan.restjet.R
+import com.sapan.restjet.data.Action
+import com.sapan.restjet.data.ButtonColor
+import com.sapan.restjet.data.ButtonContent
+import com.sapan.restjet.data.ButtonProperty
+import com.sapan.restjet.data.SpeedDial
+import com.sapan.restjet.data.fabSpeedDialItems
+import com.sapan.restjet.data.httpMethods
 import com.sapan.restjet.ui.theme.delete_icon_button_radius
 import com.sapan.restjet.ui.theme.radius_connected_button_group
 import com.sapan.restjet.ui.theme.radius_connected_button_intermediate
 import com.sapan.restjet.ui.theme.space_connected_button
 import com.sapan.restjet.ui.theme.space_connected_button_icon_and_label
 
-data class ButtonContent(
-    val action: Action,
-    val text: String,
-    val icon: ImageVector,
-    val iconContentDescription: String
-)
-
-enum class Action(string: String) {
-    ADD_HEADER("ADD_HEADER"),
-    ADD_QUERY_PARAM("ADD_QUERY_PARAM"),
-    SELECT_REQUEST_TYPE("SELECT_REQUEST_TYPE")
-}
-
-data class ButtonProperty(
-    val shape: Shape,
-    val buttonColor: ButtonColor
-)
-
-data class ButtonColor(
-    val color: Color,
-    val contentColor: Color
-)
 
 @Composable
 fun FAB(
     onClick: () -> Unit,
+    icon: ImageVector = Icons.Filled.Add,
     modifier: Modifier = Modifier
 ) {
     FloatingActionButton(
-        onClick = {}
+        onClick = onClick
     ) {
         Icon(
-            imageVector = Icons.Filled.Add,
+            imageVector = icon,
             contentDescription = stringResource(R.string.fab__add_content_description)
         )
     }
@@ -162,17 +160,21 @@ fun ConnectedButtonGroup(
     var selectedId by remember { mutableStateOf(-1) }
     val colorScheme = MaterialTheme.colorScheme
 
-    LazyRow(
-
-    ) {
+    LazyRow {
         items(buttons.size) { index ->
             val buttonContent = buttons[index]
-            val shape = when(index) {
-                0 -> RoundedCornerShape(
+            val shape = when {
+                selectedId == index -> RoundedCornerShape(
+                    topStart = radius_connected_button_group,
+                    topEnd = radius_connected_button_group,
+                    bottomStart = radius_connected_button_group,
+                    bottomEnd = radius_connected_button_group
+                )
+                index == 0 -> RoundedCornerShape(
                     topStart = radius_connected_button_group,
                     bottomStart = radius_connected_button_group
                 )
-                buttons.size - 1 -> RoundedCornerShape(
+                index == buttons.size - 1 -> RoundedCornerShape(
                     topEnd = radius_connected_button_group,
                     bottomEnd = radius_connected_button_group
                 )
@@ -225,6 +227,7 @@ fun ConnectedButton(
     shapes: Shape = ButtonDefaults.shape,
     color: Color = colorScheme.secondaryContainer,
     contentColor: Color = colorScheme.onSecondaryContainer,
+    dropDownItems: List<String> = emptyList(),
     modifier: Modifier = Modifier
 ) {
     ElevatedButton(
@@ -270,6 +273,93 @@ fun ShrinkButton(
     }
 }
 
+@Composable
+fun SpeedDialFab(
+    items: List<SpeedDial> = fabSpeedDialItems,
+    modifier: Modifier = Modifier
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    Column(
+        modifier = modifier.wrapContentSize(),
+        horizontalAlignment = Alignment.End
+    ) {
+        AnimatedVisibility(
+            visible = expanded,
+            enter = fadeIn(animationSpec = tween(durationMillis = 300)),
+            exit = fadeOut(animationSpec = tween(durationMillis = 300))
+        ) {
+            Column(
+                horizontalAlignment = Alignment.End
+            ) {
+                items.forEach { item ->
+                    SmallFloatingActionButton(
+                        onClick = {
+                            expanded = false
+                            item.onClick()
+                        }
+                    ) {
+                        Text(
+                            text = item.name,
+                            modifier = Modifier.padding(horizontal = 8.dp)
+                        )
+                    }
+                    Spacer(
+                        modifier = Modifier.size(4.dp)
+                    )
+                }
+            }
+        }
+
+        FAB(
+            onClick = {
+                expanded = !expanded
+            },
+            icon = if (expanded) Icons.Default.Close else Icons.Default.Add
+        )
+
+    }
+}
+
+@Composable
+fun HttpMethodDropDown(
+    onItemClick: (String) -> Unit = {},
+    onDismissRequest: () -> Unit = {},
+    items: List<String> = httpMethods,
+    expanded: Boolean = true,
+    modifier: Modifier = Modifier
+) {
+    DropdownMenu(
+        expanded = expanded,
+        onDismissRequest = onDismissRequest,
+        modifier = modifier
+    ) {
+        items.forEach { httpMethod ->
+            DropdownMenuItem(
+                text = {
+                    Text(text = httpMethod)
+                },
+                onClick = {
+                    onItemClick(httpMethod)
+                    onDismissRequest()
+                }
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun HttpMethodDropDownPreview() {
+    HttpMethodDropDown()
+}
+
+@Preview(showBackground = true)
+@Composable
+fun SpeedDialFabPreview() {
+    SpeedDialFab()
+}
+
 @Preview(showBackground = true)
 @Composable
 fun ExpandButtonPreview() {
@@ -287,7 +377,8 @@ fun ShrinkButtonPreview() {
 fun ConnectedButtonPreview() {
     ConnectedButton(
         onClick = {},
-        text = "click here"
+        text = "click here",
+        dropDownItems = httpMethods
     )
 }
 

@@ -1,6 +1,6 @@
 package com.sapan.restjet.data
 
-data class CollectionInfo(
+data class CollectionData(
     val title: String,
     val description: String
 )
