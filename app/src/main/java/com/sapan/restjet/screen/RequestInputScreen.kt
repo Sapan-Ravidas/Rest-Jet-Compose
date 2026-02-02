@@ -1,5 +1,6 @@
 package com.sapan.restjet.screen
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,22 +15,83 @@ import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.sapan.restjet.data.buttons
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.sapan.restjet.data.Action
+import com.sapan.restjet.data.ButtonContent
+import com.sapan.restjet.data.HttpMethod
+import com.sapan.restjet.data.httpMethods
 import com.sapan.restjet.ui.compose.ButtonDefault
 import com.sapan.restjet.ui.compose.ConnectedButtonGroup
+import com.sapan.restjet.ui.compose.HttpMethodDropDown
 import com.sapan.restjet.ui.compose.TextInputField
 import com.sapan.restjet.ui.theme.Typography
+import com.sapan.restjet.viewmodel.RequestResponseViewModel
 
 @Composable
 fun RequestInputScreen(
+    viewModel: RequestResponseViewModel = hiltViewModel(),
+    onSendRequest: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    val requestState by viewModel.requestState.collectAsStateWithLifecycle()
+    val responseState by viewModel.responseState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(responseState) {
+        if (responseState.isComplete) {
+            onSendRequest()
+        }
+    }
+
+    // local ui state
+    var showHeaderDialog by rememberSaveable { mutableStateOf(false) }
+    var showParamsDialog by rememberSaveable { mutableStateOf(false) }
+    var showMethodDropDown by rememberSaveable { mutableStateOf(false) }
+    var selectedHttpMethod by rememberSaveable { mutableStateOf("GET") }
+    var baseUrlError by rememberSaveable { mutableStateOf<String?>(null) }
+
+    val buttons = listOf(
+        ButtonContent(
+            action = Action.SELECT_REQUEST_TYPE,
+            text = selectedHttpMethod,
+            icon = Icons.Default.ArrowDropDown,
+            iconContentDescription = "select https method",
+            dropDownItems = HttpMethod.entries.map { it.string },
+            onClick = { showMethodDropDown = true },
+        ),
+        ButtonContent(
+            action = Action.ADD_HEADER,
+            text = "Header",
+            icon = Icons.Default.Add,
+            iconContentDescription = "add headers",
+            onClick = {
+                showHeaderDialog = true
+            }
+        ),
+        ButtonContent(
+            action = Action.ADD_QUERY_PARAM,
+            text = "Params",
+            icon = Icons.Default.Add,
+            iconContentDescription = "add query parameters",
+            onClick = {
+                showParamsDialog = true
+            }
+        ),
+    )
+
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -42,8 +104,7 @@ fun RequestInputScreen(
     ) {
         Column(
             modifier = modifier
-                        .wrapContentSize(Alignment.Center)
-                ,
+                        .wrapContentSize(Alignment.Center),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
@@ -55,17 +116,26 @@ fun RequestInputScreen(
 
             TextInputField(
                 label = "BASE_URL",
-                onValueChange = {},
+                value = requestState.baseUrl,
+                onValueChange = {
+                    viewModel.updateBaseUrl(it)
+                },
             )
 
             TextInputField(
                 label = "PATH",
-                onValueChange = {}
+                value = requestState.pathUrl,
+                onValueChange = {
+                    viewModel.updatePathUrl(it)
+                }
             )
 
             TextInputField(
                 label = "REQUEST_BODY",
-                onValueChange = {},
+                value = requestState.body,
+                onValueChange = {
+                    viewModel.updateBody(body = it)
+                },
                 modifier = Modifier
                     .height(200.dp)
                     .clip(RoundedCornerShape(12.dp))
@@ -76,13 +146,77 @@ fun RequestInputScreen(
                 buttons = buttons,
             )
 
+            if (showMethodDropDown) {
+                HttpMethodDropDown(
+                    onItemClick = { method ->
+                        selectedHttpMethod = method
+                        showMethodDropDown = false
+                    },
+                    onDismissRequest = {
+                        showMethodDropDown = false
+                    },
+                    items = httpMethods,
+                    expanded = showMethodDropDown
+                )
+            }
+
+            if (baseUrlError != null) {
+                Text(
+                    text = baseUrlError!!,
+                    style = Typography.bodySmall,
+                    color = Color.Red
+                )
+            }
+
             ButtonDefault(
-                onClick = {},
+                onClick = {
+                    if (requestState.baseUrl.isEmpty()) {
+                        baseUrlError = "Base URL cannot be empty"
+                        return@ButtonDefault
+                    }
+                    viewModel.updateHttpMethod(HttpMethod.fromString(selectedHttpMethod))
+                    viewModel.sendRequest()
+                },
                 text = "SEND"
             )
 
+        } // end column
+
+        /**
+         *
+         */
+        if (showHeaderDialog) {
+            KeyValueInputScreen(
+                onSubmit = { key, value ->
+                    if (viewModel.addHeader(key, value)) {
+                        showHeaderDialog = false
+                    }
+                },
+                onDismiss = {
+                    showHeaderDialog = false
+                },
+                title = "HEADER",
+                keyLabel = "key",
+                valueLabel = "value",
+            )
         }
-    }
+
+        if (showParamsDialog) {
+            KeyValueInputScreen(
+                onSubmit = { key, value ->
+                    if (viewModel.addQueryParams(key, value)) {
+                        showParamsDialog = false
+                    }
+                },
+                onDismiss = {
+                    showParamsDialog = false
+                },
+                title = "QUERY PARAMS",
+                keyLabel = "key",
+                valueLabel = "value",
+            )
+        }
+    } // end box
 }
 
 @Preview

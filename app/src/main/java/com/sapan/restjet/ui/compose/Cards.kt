@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.sapan.restjet.data.CollectionData
+import com.sapan.restjet.data.RequestState
 import com.sapan.restjet.ui.theme.Typography
 import com.sapan.restjet.ui.theme.card_content_gap
 import com.sapan.restjet.ui.theme.card_corner_radius
@@ -90,8 +91,13 @@ fun CollectionCard(
 
 @Composable
 fun RequestCard(
+    requestState: RequestState
 ) {
     var expanded by rememberSaveable { mutableStateOf(false) }
+
+    val params = requestState.queryParameters.entries.joinToString(separator = "&") {
+        "${it.key}=${it.value}"
+    }
 
     Card(
         modifier = Modifier.padding(card_content_gap).fillMaxWidth(),
@@ -115,10 +121,10 @@ fun RequestCard(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(request_card_content_vertical_gap)
                 ) {
-                    Text(text = "base_url: ", style = Typography.bodySmall)
-                    Text(text = "path: ", style = Typography.titleSmall)
-                    Text(text = "query: ", style = Typography.bodySmall)
-                    Text(text = "GET", style = Typography.titleMedium)
+                    Text(text = "base_url: ${requestState.baseUrl}", style = Typography.bodySmall)
+                    Text(text = "path: ${requestState.pathUrl}", style = Typography.titleSmall)
+                    Text(text = "query: $params", style = Typography.bodySmall)
+                    Text(text = requestState.action.name, style = Typography.titleMedium)
                 }
 
                 Spacer(
@@ -151,7 +157,7 @@ fun RequestCard(
 @Preview(showBackground = true)
 @Composable
 fun RequestCardPreview() {
-    RequestCard()
+    RequestCard(RequestState())
 }
 
 @Preview(showBackground = true)

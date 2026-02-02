@@ -10,7 +10,7 @@ import com.sapan.restjet.ui.compose.CollectionCard
 
 @Composable
 fun CollectionScreen(
-    list: List<CollectionData> = items,
+    list: List<CollectionData> = emptyList(),
     modifier: Modifier = Modifier
 ) {
     LazyColumn(

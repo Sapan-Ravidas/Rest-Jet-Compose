@@ -8,12 +8,9 @@ import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
@@ -22,6 +19,7 @@ import com.sapan.restjet.ui.theme.input_field_out_label_font_size
 
 @Composable
 fun TextInputField(
+    value: String = "",
     label: String,
     onValueChange: (String) -> Unit,
     labelColor: Color = Color.Black,
@@ -29,23 +27,17 @@ fun TextInputField(
     borderColor: Color = Color.Gray,
     modifier: Modifier = Modifier,
 ) {
-    var value by remember { mutableStateOf("") }
-
     Column {
         OutlinedTextField(
             modifier = modifier,
             value = value,
-            onValueChange = { newValue: String ->
-                value = newValue
-                onValueChange(newValue)
-            },
+            onValueChange = onValueChange,
             label = { Text(text = label, color = textColor) },
             trailingIcon = {
                 if (value.isNotEmpty()) {
                     IconButton(
                         onClick = {
-                            value = ""
-                            onValueChange(value)
+                            onValueChange("")
                         },
                     ) {
                         Icon(
@@ -55,7 +47,16 @@ fun TextInputField(
                         )
                     }
                 }
-            }
+            },
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = borderColor,
+                unfocusedBorderColor = borderColor,
+                focusedTextColor = textColor,
+                unfocusedTextColor = textColor,
+                focusedLabelColor = labelColor,
+                unfocusedLabelColor = labelColor,
+                cursorColor = borderColor
+            )
         )
         Text(
             modifier = Modifier.padding(start = 8.dp),
@@ -69,6 +70,6 @@ fun TextInputField(
 @Preview(showBackground = true)
 @Composable
 fun TextInputFieldPreview() {
-    TextInputField("label", {},
+    TextInputField(value = "", "label", {},
          modifier = Modifier.height(200.dp))
 }

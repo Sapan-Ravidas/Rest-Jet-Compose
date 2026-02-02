@@ -52,7 +52,6 @@ import com.sapan.restjet.data.ButtonColor
 import com.sapan.restjet.data.ButtonContent
 import com.sapan.restjet.data.ButtonProperty
 import com.sapan.restjet.data.SpeedDial
-import com.sapan.restjet.data.fabSpeedDialItems
 import com.sapan.restjet.data.httpMethods
 import com.sapan.restjet.ui.theme.delete_icon_button_radius
 import com.sapan.restjet.ui.theme.radius_connected_button_group
@@ -197,8 +196,13 @@ fun ConnectedButtonGroup(
                 buttonColor = buttonColor,
             )
 
+            val itemClickHandler = {
+                selectedId = index
+                buttonContent.onClick()
+            }
+
             ConnectedButton(
-                onClick = { selectedId = index },
+                onClick = itemClickHandler,
                 text = buttonContent.text,
                 shapes = shape,
                 iconVector = buttonContent.icon,
@@ -275,7 +279,7 @@ fun ShrinkButton(
 
 @Composable
 fun SpeedDialFab(
-    items: List<SpeedDial> = fabSpeedDialItems,
+    items: List<SpeedDial> = emptyList(),
     modifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -390,19 +394,22 @@ fun ConnectedButtonGroupPreview() {
             action = Action.ADD_QUERY_PARAM,
             text = "Button 1",
             icon = Icons.Default.Add,
-            iconContentDescription = "button1"
+            iconContentDescription = "button1",
+            onClick = {}
         ),
         ButtonContent(
             action = Action.SELECT_REQUEST_TYPE,
             text = "Button 2",
             icon = Icons.Default.Add,
-            iconContentDescription = "button2"
+            iconContentDescription = "button2",
+            onClick = {}
         ),
         ButtonContent(
             action = Action.ADD_HEADER,
             text = "Button 3",
             icon = Icons.Default.Add,
-            iconContentDescription = "button3"
+            iconContentDescription = "button3",
+            onClick = {}
         ),
     )
 
@@ -412,7 +419,7 @@ fun ConnectedButtonGroupPreview() {
     ) {
         ConnectedButtonGroup(
             buttons = buttons,
-            modifier = Modifier.padding(8.dp)
+            modifier = Modifier.padding(8.dp),
         )
     }
 }
