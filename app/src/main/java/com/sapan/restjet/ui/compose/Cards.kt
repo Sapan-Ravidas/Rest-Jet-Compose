@@ -1,5 +1,7 @@
 package com.sapan.restjet.ui.compose
 
+import android.text.TextUtils
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,6 +17,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -22,10 +25,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import com.sapan.restjet.data.CollectionData
+import com.sapan.restjet.data.HttpMethod
 import com.sapan.restjet.data.RequestState
+import com.sapan.restjet.data.ResponseState
+import com.sapan.restjet.ui.theme.DarkGreen
 import com.sapan.restjet.ui.theme.Typography
 import com.sapan.restjet.ui.theme.card_content_gap
 import com.sapan.restjet.ui.theme.card_corner_radius
@@ -91,13 +99,21 @@ fun CollectionCard(
 
 @Composable
 fun RequestCard(
-    requestState: RequestState
+    requestState: RequestState,
+    responseState: ResponseState
 ) {
     var expanded by rememberSaveable { mutableStateOf(false) }
 
     val params = requestState.queryParameters.entries.joinToString(separator = "&") {
         "${it.key}=${it.value}"
     }
+
+    val responseCodeColor = when {
+            responseState.statusCode.startsWith("2") -> DarkGreen
+            responseState.statusCode.startsWith("4") ||
+                 responseState.statusCode.startsWith("5") -> Color.Red
+            else -> Color.Blue
+        }
 
     Card(
         modifier = Modifier.padding(card_content_gap).fillMaxWidth(),
@@ -124,7 +140,20 @@ fun RequestCard(
                     Text(text = "base_url: ${requestState.baseUrl}", style = Typography.bodySmall)
                     Text(text = "path: ${requestState.pathUrl}", style = Typography.titleSmall)
                     Text(text = "query: $params", style = Typography.bodySmall)
-                    Text(text = requestState.action.name, style = Typography.titleMedium)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(text = requestState.action.name, style = Typography.titleMedium)
+                        Text(text = responseState.statusCode, style = Typography.titleMedium, color = responseCodeColor)
+                    }
+                    if (!responseState.error.isNullOrEmpty()) {
+                        Text(
+                            text = responseState.error!!,
+                            style = Typography.bodySmall,
+                            color = Color.Red
+                        )
+                    }
                 }
 
                 Spacer(
@@ -138,16 +167,46 @@ fun RequestCard(
             }
 
             if (expanded) {
-                Surface(
-                    tonalElevation = 8.dp,
-                    modifier = Modifier.fillMaxWidth().padding(2.dp),
-                    color = Color.White,
-                    shape = RoundedCornerShape(card_corner_radius)
-                ) {
-                    Text(
-                        modifier = Modifier.padding(8.dp),
-                        text = "json request_body"
-                    )
+                Column {
+                    Surface(
+                        tonalElevation = 8.dp,
+                        modifier = Modifier.fillMaxWidth().padding(2.dp),
+                        color = Color.White,
+                        shape = RoundedCornerShape(card_corner_radius)
+                    ) {
+                        Column {
+                            if (!TextUtils.isEmpty(requestState.body)) {
+                                Text(
+                                    modifier = Modifier.padding(horizontal = 8.dp),
+                                    text = "Request Body",
+                                    style = Typography.bodySmall,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+
+                                Text(
+                                    modifier = Modifier.padding(horizontal = 8.dp),
+                                    text = requestState.body,
+                                    style = Typography.bodySmall
+                                )
+                            }
+
+                            if (responseState.responseHeaders.isNotEmpty()) {
+                                Text(
+                                    modifier = Modifier.padding(top = 16.dp, start = 8.dp),
+                                    text = "Response Headers",
+                                    style = Typography.bodySmall,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                                for (pair in responseState.responseHeaders) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth().padding(start = 8.dp, end = 8.dp, bottom = 8.dp),
+                                    ) {
+                                        Text(text = pair, style = Typography.bodySmall)
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -157,7 +216,30 @@ fun RequestCard(
 @Preview(showBackground = true)
 @Composable
 fun RequestCardPreview() {
-    RequestCard(RequestState())
+    RequestCard(RequestState().copy(
+        baseUrl = "https://jsonplaceholder.typicode.com",
+        pathUrl = "posts",
+        queryParameters = mapOf(
+            "userId" to "1"
+        ),
+        action = HttpMethod.GET,
+        body = """
+            {
+                "title": "foo",
+                "body": "bar",
+                "userId": 1
+            }
+        """.trimIndent(),
+        headers = mapOf(
+            "content-type" to "application/json"
+        )
+
+    ), ResponseState().copy(
+        statusCode = "400",
+        responseHeaders = listOf(
+            "Date: Mon 02 Jan 2026"
+        )
+    ))
 }
 
 @Preview(showBackground = true)

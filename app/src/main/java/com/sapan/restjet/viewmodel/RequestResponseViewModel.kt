@@ -6,7 +6,6 @@ import com.sapan.restjet.data.HttpMethod
 import com.sapan.restjet.data.RequestState
 import com.sapan.restjet.data.ResponseState
 import com.sapan.restjet.network.RetrofitClient
-import dagger.hilt.android.HiltAndroidApp
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -71,7 +70,7 @@ class RequestResponseViewModel @Inject constructor() : ViewModel() {
                         error = null,
                         statusCode = "",
                         responseBody = "",
-                        responseHeaders = emptyMap(),
+                        responseHeaders = listOf(),
                         responseTime = null
                     )
                 }
@@ -101,7 +100,13 @@ class RequestResponseViewModel @Inject constructor() : ViewModel() {
                         isLoading = false,
                         statusCode = resonse.code().toString(),
                         responseBody = resonse.body()?.string() ?: "",
-                        responseHeaders = resonse.headers().toMap(),
+                        responseHeaders = resonse.raw().headers.let { rawHeaders ->
+                            mutableListOf<String>().apply {
+                                for (pair in rawHeaders) {
+                                    add("${pair.first}: ${pair.second}")
+                                }
+                            }
+                        },
                         responseTime = endTime - startTime
                     )
                 }

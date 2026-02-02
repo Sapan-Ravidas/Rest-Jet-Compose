@@ -1,10 +1,12 @@
 package com.sapan.restjet.ui.compose
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -12,22 +14,32 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.sapan.restjet.data.JsonNode
-import org.json.JSONObject
 
-
-val jsonString = """
-    {
-        "user": {
-            "id": 1,
-            "name": "Sapan",
-            "skills": ["kotlin", "java", "android"]
+@Composable
+fun JsonViewerCard(
+    node: JsonNode,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp)
+        ) {
+            JsonViewer(node = node)
         }
     }
-""".trimIndent()
-
-val rootNode = JSONObject(jsonString)
+}
 
 @Composable
 fun JsonViewer(
@@ -36,18 +48,19 @@ fun JsonViewer(
 ) {
     when (node) {
         is JsonNode.JsonObjectNode -> ExpandableJsonNode(
-            label = node.key ?: "{object}",
+            label = node.key ?: "{}",
             children = node.children,
             indent = indent
         )
         is JsonNode.JsonArrayNode -> ExpandableJsonNode(
-            label = node.key ?: "[array]",
+            label = node.key ?: "[]",
             children = node.children,
             indent = indent
         )
         is JsonNode.JsonPrimitiveNode -> Text(
-            text = "${node.key ?: ""}: ${node.value}",
-            modifier = Modifier.padding(start = indent.dp)
+            text = "${node.key?.let { "\"$it\": " } ?: ""}${formatPrimitiveValue(node.value)}",
+            modifier = Modifier.padding(start = indent.dp),
+            style = TextStyle(fontSize = 14.sp)
         )
     }
 }
@@ -58,23 +71,44 @@ fun ExpandableJsonNode(
     children: List<JsonNode>,
     indent: Int
 ) {
-    var expanded by remember { mutableStateOf(false) }
+    var expanded by remember { mutableStateOf(true) } // Start expanded by default
 
     Column(
         modifier = Modifier.padding(start = indent.dp)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.clickable{ expanded = !expanded }
+            modifier = Modifier
+                .clickable { expanded = !expanded }
+                .padding(vertical = 4.dp)
         ) {
             Text(
-                text = if (expanded) "▼ $label" else "▶ $label"
+                text = if (expanded) "▼ " else "▶ ",
+                style = TextStyle(fontSize = 12.sp)
             )
-            if (expanded) {
+            Text(
+                text = label,
+                style = TextStyle(fontSize = 14.sp)
+            )
+        }
+
+        if (expanded) {
+            Column(
+                modifier = Modifier.padding(start = 16.dp)
+            ) {
                 children.forEach { child ->
-                    JsonViewer(child, indent + 16)
+                    JsonViewer(child, indent)
                 }
             }
         }
+    }
+}
+
+private fun formatPrimitiveValue(value: String): String {
+    return when {
+        value == "null" -> "null"
+        value == "true" || value == "false" -> value
+        value.toDoubleOrNull() != null -> value
+        else -> "\"$value\""
     }
 }

@@ -26,7 +26,7 @@ data class RequestState (
 data class ResponseState(
     val statusCode: String = "",
     val responseBody: String = "",
-    val responseHeaders: Map<String, String> = emptyMap(),
+    val responseHeaders: List<String> = listOf(),
     val isLoading: Boolean = false,
     val error: String? = null,
     val responseTime: Long? = null
