@@ -6,10 +6,13 @@ import com.sapan.restjet.data.HttpMethod
 import com.sapan.restjet.data.RequestState
 import com.sapan.restjet.data.ResponseState
 import com.sapan.restjet.network.RetrofitClient
+import com.sapan.restjet.utils.UrlBuildException
+import com.sapan.restjet.utils.UrlBuilder
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -30,6 +33,16 @@ class RequestResponseViewModel @Inject constructor() : ViewModel() {
 
     private var currentRequestJob: Job? = null
 
+    /**
+     * saved request
+     */
+    private val _savedRequestFilename = MutableStateFlow<String?>(null)
+    val savedRequestFilename: StateFlow<String?> get() = _savedRequestFilename
+
+    private val _selectedCollectionName = MutableStateFlow<String?>(null)
+    val selectedCollectionName: StateFlow<String?> get() = _selectedCollectionName
+
+
     fun updateBaseUrl(baseUrl: String) {
         _requestState.value = _requestState.value.copy(baseUrl = baseUrl)
     }
@@ -46,6 +59,14 @@ class RequestResponseViewModel @Inject constructor() : ViewModel() {
         _requestState.value = _requestState.value.copy(action = httpMethod)
     }
 
+    fun updateSavedRequestFilename(filename: String) {
+        _savedRequestFilename.value = filename
+    }
+
+    fun updateSelectedCollectionName(collectionName: String) {
+        _selectedCollectionName.value = collectionName
+    }
+
     fun addHeader(key: String, value: String): Boolean {
         val newHeaders = _requestState.value.headers.toMutableMap()
         newHeaders[key] = value
@@ -60,6 +81,10 @@ class RequestResponseViewModel @Inject constructor() : ViewModel() {
         return true
     }
 
+
+    /**
+     *
+     */
     fun sendRequest() {
         currentRequestJob?.cancel()
         currentRequestJob = viewModelScope.launch {
@@ -131,6 +156,9 @@ class RequestResponseViewModel @Inject constructor() : ViewModel() {
         }
     }
 
+    /**
+     *
+     */
     fun clearResponse() {
         _responseState.value = ResponseState()
     }
@@ -139,25 +167,11 @@ class RequestResponseViewModel @Inject constructor() : ViewModel() {
         _requestState.value = RequestState()
     }
 
-    fun buildUrl(): String {
+    private fun buildUrl(): String {
         val state = _requestState.value
         try {
-            val baseUrl = state.baseUrl.trim().trimStart('/').trimEnd('/')
-            val pathUrl = state.pathUrl.trim().trimStart('/')
-
-            val url = if (pathUrl.isNotEmpty()) {
-                "$baseUrl/$pathUrl"
-            } else {
-                baseUrl
-            }
-
-            return if (state.queryParameters.isNotEmpty()) {
-                val queryString = buildQueryString(state.queryParameters)
-                return "$url?$queryString"
-            } else {
-                url
-            }
-        } catch (e: Exception) {
+            return UrlBuilder.buildUrl(state)
+        } catch (e: UrlBuildException) {
             _responseState.value = _responseState.value.copy(error = e.message)
             return ""
         }
@@ -168,13 +182,7 @@ class RequestResponseViewModel @Inject constructor() : ViewModel() {
         clearResponse()
     }
 
-    private fun buildQueryString(queryParams: Map<String, String>): String {
-        return queryParams.entries
-            .filter { (key, value) -> key.isNotEmpty() && value.isNotEmpty() }
-            .joinToString(separator = "&") { (key, value) ->
-                "${URLEncoder.encode(key, "UTF-8")}=${URLEncoder.encode(value, "UTF-8")}"
-            }
-    }
+
 
     private suspend fun makeGetRequest(
         url: String,

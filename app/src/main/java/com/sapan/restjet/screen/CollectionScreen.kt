@@ -5,7 +5,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import com.sapan.restjet.data.CollectionData
+import com.sapan.restjet.db.entity.CollectionData
 import com.sapan.restjet.ui.compose.CollectionCard
 
 @Composable

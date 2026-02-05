@@ -82,6 +82,9 @@ dependencies {
     ksp(libs.hilt.android.compiler)
     implementation(libs.androidx.hilt.navigation.compose)
 
-    // Remove duplicate navigation dependency - already have libs.androidx.navigation.compose
-    // implementation("androidx.navigation:navigation-compose:2.7.7") // REMOVE THIS
+    // room
+    implementation("androidx.room:room-runtime:2.6.1")
+    ksp("androidx.room:room-compiler:2.6.1")
+    implementation("androidx.room:room-paging:2.6.1")
+    implementation("androidx.room:room-ktx:2.6.1")
 }
