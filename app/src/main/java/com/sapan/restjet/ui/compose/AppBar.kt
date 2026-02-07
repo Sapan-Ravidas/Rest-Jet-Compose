@@ -79,14 +79,14 @@ fun BottomNavigationBar(
     ) {
         NavigationBarItem(
             onClick = {
-                onSelectedItem(Route.Home.route)
+                onSelectedItem(Route.Home().route)
             },
-            selected = selectedItem == Route.Home.route,
+            selected = selectedItem == Route.Home().route,
             icon = {
                 Icon(imageVector = Icons.Default.Home, contentDescription = null)
             },
             label = {
-                Text(text = Route.Home.route)
+                Text(text = Route.Home().route)
             }
         )
 

@@ -1,6 +1,9 @@
 package com.sapan.restjet.ui.compose
 
 import android.text.TextUtils
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -8,11 +11,13 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -26,10 +31,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.max
 import com.sapan.restjet.db.entity.CollectionData
 import com.sapan.restjet.data.HttpMethod
 import com.sapan.restjet.data.RequestState
 import com.sapan.restjet.data.ResponseState
+import com.sapan.restjet.db.entity.SavedRequestData
 import com.sapan.restjet.ui.theme.DarkGreen
 import com.sapan.restjet.ui.theme.Typography
 import com.sapan.restjet.ui.theme.card_content_gap
@@ -49,7 +56,9 @@ fun IconStar() {
 }
 @Composable
 fun CollectionCard(
-    collectionInfo: CollectionData = CollectionData("header", "description")
+    collectionInfo: CollectionData,
+    onCollectionClicked: (CollectionData) -> Unit,
+    onCollectionDeleteClicked: (CollectionData) -> Unit
 ) {
     Card(
         modifier = Modifier.padding(card_content_gap).fillMaxWidth(),
@@ -67,7 +76,9 @@ fun CollectionCard(
             )
 
             Column(
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f).clickable {
+                    onCollectionClicked(collectionInfo)
+                }
             ) {
                 Text(
                     text = collectionInfo.title,
@@ -75,7 +86,7 @@ fun CollectionCard(
                 )
 
                 Text(
-                    text = collectionInfo.description,
+                    text = collectionInfo.description ?: "no description",
                     style = Typography.bodySmall
                 )
             }
@@ -85,7 +96,9 @@ fun CollectionCard(
             )
 
             DeleteIconButton(
-                onClick = {},
+                onClick = {
+                    onCollectionDeleteClicked(collectionInfo)
+                },
                 modifier = Modifier.size(card_trailing_icon_size)
                 )
 
@@ -210,6 +223,43 @@ fun RequestCard(
     }
 }
 
+@Composable
+fun SavedRequestItem(
+    request: SavedRequestData,
+    onClick: (SavedRequestData) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(modifier = modifier
+        .fillMaxWidth()
+        .background(color = MaterialTheme.colorScheme.surfaceContainerLow)
+        .border(width = 0.4.dp, color = MaterialTheme.colorScheme.primary, shape = RoundedCornerShape(8.dp))
+        .padding(8.dp)
+        .clickable { onClick(request) }
+    ) {
+        Text(
+            text = "${request.httpMethod} - ",
+            style = MaterialTheme.typography.titleMedium,
+            maxLines = 1
+        )
+        Text(
+            text = request.name,
+            style = MaterialTheme.typography.titleMedium,
+            maxLines = 1
+        )
+
+    }
+}
+
+@Preview
+@Composable
+fun SavedRequestItemPreview() {
+    SavedRequestItem(
+        request = SavedRequestData(id = 1, collectionId = 1, name = "test", httpMethod = "GET", baseUrl = "https://jsonplaceholder.typicode.com", pathUrl = "/posts", headers = "", queryParams = "", requestBody = "", savedAt = ""),
+        onClick = {}
+    )
+}
+
+
 @Preview(showBackground = true)
 @Composable
 fun RequestCardPreview() {
@@ -237,10 +287,4 @@ fun RequestCardPreview() {
             "Date: Mon 02 Jan 2026"
         )
     ))
-}
-
-@Preview(showBackground = true)
-@Composable
-fun CollectionCardPreview() {
-    CollectionCard()
 }

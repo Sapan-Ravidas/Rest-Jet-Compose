@@ -19,22 +19,22 @@ interface CollectionDao {
     suspend fun insertRequest(request: SavedRequestData): Long
 
     @Update
-    suspend fun updateCollection(collection: CollectionData): Long
+    suspend fun updateCollection(collection: CollectionData): Int
 
     @Update
-    suspend fun updateRequest(request: SavedRequestData): Long
+    suspend fun updateRequest(request: SavedRequestData): Int
 
     @Delete
-    suspend fun deleteCollection(collection: CollectionData): Long
+    suspend fun deleteCollection(collection: CollectionData): Int
 
     @Delete
-    suspend fun deleteRequest(request: SavedRequestData): Long
+    suspend fun deleteRequest(request: SavedRequestData): Int
 
     @Query("SELECT * FROM collections ORDER BY created_at DESC")
     fun getAllCollections(): Flow<List<CollectionData>>
 
     @Query("SELECT * from collections WHERE title = :name")
-    fun getCollectionByName(name: String): Flow<CollectionData>
+    fun getCollectionByName(name: String): Flow<CollectionData?>
 
     @Query("SELECT * FROM saved_requests WHERE " +
             "(SELECT collection_id FROM collections WHERE title = :name) " +

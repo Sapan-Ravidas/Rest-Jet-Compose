@@ -33,6 +33,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.sapan.restjet.data.Action
 import com.sapan.restjet.data.ButtonContent
 import com.sapan.restjet.data.HttpMethod
+import com.sapan.restjet.data.RequestState
 import com.sapan.restjet.data.httpMethods
 import com.sapan.restjet.ui.compose.ButtonDefault
 import com.sapan.restjet.ui.compose.ConnectedButtonGroup
@@ -45,6 +46,7 @@ import com.sapan.restjet.viewmodel.RequestResponseViewModel
 fun RequestInputScreen(
     viewModel: RequestResponseViewModel = hiltViewModel(),
     onSendRequest: () -> Unit = {},
+    onSaveCollection: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val requestState by viewModel.requestState.collectAsStateWithLifecycle()
@@ -121,7 +123,7 @@ fun RequestInputScreen(
                 .align(Alignment.TopEnd)
                 .padding(16.dp)
                 .clickable{
-                    // TODO
+                    onSaveCollection()
                 }
         )
 
@@ -245,6 +247,11 @@ fun RequestInputScreen(
 @Preview
 @Composable
 fun RequestInputScreenPreview() {
-    RequestInputScreen()
+    RequestInputScreen(
+        onSendRequest = {},
+        onSaveCollection = {
+
+        }
+    )
 }
 

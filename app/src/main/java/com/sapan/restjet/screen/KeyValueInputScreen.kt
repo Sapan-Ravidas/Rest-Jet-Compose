@@ -1,6 +1,7 @@
 package com.sapan.restjet.screen
 
 import android.text.TextUtils
+import android.util.Log
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
@@ -71,8 +72,10 @@ fun KeyValueInputScreen(
             ) {
                 TextInputField(
                     label = if (keyErrorMsg != null) keyErrorMsg!! else keyLabel,
+                    value = key,
                     onValueChange = {
                         key = it
+                        Log.d("COLLECTION_SCREEN", "key=$key")
                     },
                     borderColor = colorScheme.secondary,
                     textColor = colorScheme.onSecondaryContainer,
@@ -81,6 +84,7 @@ fun KeyValueInputScreen(
 
                 TextInputField(
                     label = if (valueErrorMsg != null) valueErrorMsg!! else valueLabel,
+                    value = value,
                     onValueChange = {
                         value = it
                     },

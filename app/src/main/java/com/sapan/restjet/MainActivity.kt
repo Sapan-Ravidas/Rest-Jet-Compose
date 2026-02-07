@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.sapan.restjet.ui.theme.RestJetTheme
+import com.sapan.restjet.viewmodel.CollectionViewModel
 import com.sapan.restjet.viewmodel.RequestResponseViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -22,11 +23,14 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        val viewModel: RequestResponseViewModel by viewModels()
+        val requestResponseViewModel: RequestResponseViewModel by viewModels()
+        val collectionViewModel: CollectionViewModel by viewModels()
+
         setContent {
             RestJetTheme {
                 RestJetApp(
-                    viewModel = viewModel
+                    requestResponseViewModel = requestResponseViewModel,
+                    collectionViewModel = collectionViewModel
                 )
             }
         }

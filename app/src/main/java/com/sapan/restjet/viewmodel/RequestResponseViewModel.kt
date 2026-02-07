@@ -1,11 +1,14 @@
 package com.sapan.restjet.viewmodel
 
+import androidx.compose.runtime.MutableState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sapan.restjet.data.HttpMethod
 import com.sapan.restjet.data.RequestState
 import com.sapan.restjet.data.ResponseState
+import com.sapan.restjet.db.entity.CollectionData
 import com.sapan.restjet.network.RetrofitClient
+import com.sapan.restjet.repository.ClientRepository
 import com.sapan.restjet.utils.UrlBuildException
 import com.sapan.restjet.utils.UrlBuilder
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -24,7 +27,10 @@ import java.net.URLEncoder
 import javax.inject.Inject
 
 @HiltViewModel
-class RequestResponseViewModel @Inject constructor() : ViewModel() {
+class RequestResponseViewModel @Inject constructor(
+    private val repository: ClientRepository
+) : ViewModel() {
+
     private val _requestState = MutableStateFlow(RequestState())
     val requestState: StateFlow<RequestState> get() = _requestState
 
@@ -42,6 +48,10 @@ class RequestResponseViewModel @Inject constructor() : ViewModel() {
     private val _selectedCollectionName = MutableStateFlow<String?>(null)
     val selectedCollectionName: StateFlow<String?> get() = _selectedCollectionName
 
+
+    /**
+     *
+     */
 
     fun updateBaseUrl(baseUrl: String) {
         _requestState.value = _requestState.value.copy(baseUrl = baseUrl)
@@ -79,6 +89,22 @@ class RequestResponseViewModel @Inject constructor() : ViewModel() {
         newQueryParams[key] = value
         _requestState.value = _requestState.value.copy(queryParameters = newQueryParams)
         return true
+    }
+
+    /**
+     *
+     */
+    fun saveCollection(title: String, description: String? = null) {
+        viewModelScope.launch {
+            repository.saveRequest(
+                filename = title,
+                requestState = _requestState.value,
+                collectionName = title,
+                collectionDescription = description
+            ).collect { collectionId ->
+
+            }
+        }
     }
 
 
