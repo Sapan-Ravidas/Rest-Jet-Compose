@@ -1,5 +1,6 @@
 package com.sapan.restjet.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sapan.restjet.db.entity.CollectionData
@@ -51,6 +52,7 @@ class CollectionViewModel @Inject constructor(
         collectionName?.let {
             viewModelScope.launch {
                 repository.getAllSavedRequestForCollection(collectionName).collect { requests ->
+                    Log.d("COLLECTION_VIEW_MODEL", "savedRequest=$savedRequests")
                     _savedRequests.value = requests
                 }
             }

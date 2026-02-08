@@ -1,5 +1,6 @@
 package com.sapan.restjet.db
 
+import android.util.Log
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
@@ -7,6 +8,7 @@ import com.sapan.restjet.RestJetApplication
 import com.sapan.restjet.db.dao.CollectionDao
 import com.sapan.restjet.db.entity.CollectionData
 import com.sapan.restjet.db.entity.SavedRequestData
+import java.util.concurrent.Executors
 
 @Database(
     entities = [
@@ -41,7 +43,10 @@ abstract class ClientDatabase: RoomDatabase() {
                     DATABASE_NAME
                     )
                     .fallbackToDestructiveMigration()
+                    .setQueryCallback({sqlQuery, bindArgs ->
+                            Log.d("ROOM_DEBUG", "SQL Query: $sqlQuery, Args: $bindArgs")
+                        }, Executors.newSingleThreadExecutor()
+                    )
                     .build()
-
     }
 }

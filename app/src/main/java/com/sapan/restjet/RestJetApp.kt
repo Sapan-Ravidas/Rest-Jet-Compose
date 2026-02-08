@@ -1,12 +1,14 @@
 package com.sapan.restjet
 
 import android.text.TextUtils
+import android.util.Log
 import androidx.compose.foundation.gestures.DraggableState
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -17,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -24,6 +27,7 @@ import androidx.navigation.compose.rememberNavController
 import com.sapan.restjet.data.SpeedDial
 import com.sapan.restjet.screen.CollectionScreen
 import com.sapan.restjet.screen.KeyValueInputScreen
+import com.sapan.restjet.screen.PopupDialog
 import com.sapan.restjet.screen.RequestInputScreen
 import com.sapan.restjet.screen.ResponseScreen
 import com.sapan.restjet.screen.Route
@@ -73,6 +77,17 @@ fun RestJetApp(
         }
     )
 
+    var showDialogToSaveFile by rememberSaveable { mutableStateOf(false) }
+
+    LaunchedEffect(drawerState.currentValue) {
+        Log.d("REST_JET_APP", "drawerState=$drawerState")
+        val filename = navBackStackEntry?.arguments?.getString("title")
+        if (drawerState.isOpen) {
+            collectionViewModel.loadSavedRequests(filename)
+            Log.d("REST_JET_APP", "loadSavedRequests")
+        }
+    }
+
     SavedRequestDrawer(
         drawerState = drawerState,
         onCloseDrawer = {
@@ -101,8 +116,17 @@ fun RestJetApp(
                 BottomNavigationBar(
                     selectedItem = currentRoute.route,
                     onSelectedItem = { target ->
-                        if (target != currentRoute.route) {
-                            navController.navigate(target)
+                        navController.navigate(target) {
+                            // Pop up to the start destination of the graph to
+                            // avoid building up a huge stack of destinations
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            // Avoid multiple copies of the same destination when
+                            // reselecting the same item
+                            launchSingleTop = true
+                            // Restore state when reselecting a previously selected item
+                            restoreState = true
                         }
                     }
                 )
@@ -122,8 +146,8 @@ fun RestJetApp(
                         onSendRequest = {
                             navController.navigate(Route.Response.route)
                         },
-                        onSaveCollection = {
-
+                        onSaveRequest = {
+                            showDialogToSaveFile = true
                         }
                     )
                 }
@@ -140,7 +164,8 @@ fun RestJetApp(
 
                 composable(Route.Response.route) {
                     ResponseScreen(
-                        viewModel = requestResponseViewModel
+                        viewModel = requestResponseViewModel,
+                        navController = navController
                     )
                 }
             }
@@ -163,6 +188,24 @@ fun RestJetApp(
             }
         }
     }
+
+    if (showDialogToSaveFile) {
+        PopupDialog(
+            onDismissRequest = {
+                showDialogToSaveFile = false
+            },
+            onConfirm = { filename ->
+                val collectionName = navBackStackEntry?.arguments?.getString("title")
+                if (collectionName != null) {
+                    requestResponseViewModel.saveRequest(collectionName, filename)
+                } else {
+                    showCollectionDialog = true
+                }
+                showDialogToSaveFile = false
+            }
+        )
+    }
+
 
 
 }

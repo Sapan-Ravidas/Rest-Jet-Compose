@@ -25,6 +25,7 @@ fun JsonViewerCard(
     node: JsonNode,
     modifier: Modifier = Modifier
 ) {
+    val node = remember { node }
     Card(
         modifier = modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),

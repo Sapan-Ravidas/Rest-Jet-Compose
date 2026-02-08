@@ -1,5 +1,6 @@
 package com.sapan.restjet.viewmodel
 
+import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -7,15 +8,18 @@ import com.sapan.restjet.data.HttpMethod
 import com.sapan.restjet.data.RequestState
 import com.sapan.restjet.data.ResponseState
 import com.sapan.restjet.db.entity.CollectionData
+import com.sapan.restjet.events.UIEvent
 import com.sapan.restjet.network.RetrofitClient
 import com.sapan.restjet.repository.ClientRepository
 import com.sapan.restjet.utils.UrlBuildException
 import com.sapan.restjet.utils.UrlBuilder
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -30,6 +34,9 @@ import javax.inject.Inject
 class RequestResponseViewModel @Inject constructor(
     private val repository: ClientRepository
 ) : ViewModel() {
+
+    private val _uiEvents = Channel<UIEvent>()
+    val uiEvent = _uiEvents.receiveAsFlow()
 
     private val _requestState = MutableStateFlow(RequestState())
     val requestState: StateFlow<RequestState> get() = _requestState
@@ -94,15 +101,14 @@ class RequestResponseViewModel @Inject constructor(
     /**
      *
      */
-    fun saveCollection(title: String, description: String? = null) {
+    fun saveRequest(collectionName: String, filename: String) {
         viewModelScope.launch {
             repository.saveRequest(
-                filename = title,
+                filename = filename,
                 requestState = _requestState.value,
-                collectionName = title,
-                collectionDescription = description
-            ).collect { collectionId ->
-
+                collectionName = collectionName,
+            ).collect { id ->
+                Log.d("REQUEST_RESPONSE_VIEW_MODEL", "saved request id: $id")
             }
         }
     }
@@ -161,6 +167,8 @@ class RequestResponseViewModel @Inject constructor(
                         responseTime = endTime - startTime
                     )
                 }
+
+                _uiEvents.send(UIEvent.NavigateToResponseScreen)
 
             } catch (e: HttpException) {
                 _responseState.update {

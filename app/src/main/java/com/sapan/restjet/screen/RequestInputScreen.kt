@@ -41,22 +41,30 @@ import com.sapan.restjet.ui.compose.HttpMethodDropDown
 import com.sapan.restjet.ui.compose.TextInputField
 import com.sapan.restjet.ui.theme.Typography
 import com.sapan.restjet.viewmodel.RequestResponseViewModel
+import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.sapan.restjet.events.UIEvent
 
 @Composable
 fun RequestInputScreen(
     viewModel: RequestResponseViewModel = hiltViewModel(),
     onSendRequest: () -> Unit = {},
-    onSaveCollection: () -> Unit,
+    onSaveRequest: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val requestState by viewModel.requestState.collectAsStateWithLifecycle()
-    val responseState by viewModel.responseState.collectAsStateWithLifecycle()
-
-    LaunchedEffect(responseState) {
-        if (responseState.isComplete) {
-            onSendRequest()
+    val lifeCycleOwner = LocalLifecycleOwner.current
+    LaunchedEffect(lifeCycleOwner) {
+        viewModel.uiEvent.collect { event ->
+            when(event) {
+                is UIEvent.NavigateToResponseScreen -> {
+                    onSendRequest()
+                }
+            }
         }
     }
+
+    val requestState by viewModel.requestState.collectAsStateWithLifecycle()
+    val responseState by viewModel.responseState.collectAsStateWithLifecycle()
 
     // local ui state
     var showHeaderDialog by rememberSaveable { mutableStateOf(false) }
@@ -105,7 +113,7 @@ fun RequestInputScreen(
             .wrapContentSize()
 
     ) {
-        if (viewModel.responseState.value.isLoading) {
+        if (responseState.isLoading) {
             Box(
                 modifier = Modifier.fillMaxSize()
             ) {
@@ -123,7 +131,7 @@ fun RequestInputScreen(
                 .align(Alignment.TopEnd)
                 .padding(16.dp)
                 .clickable{
-                    onSaveCollection()
+                    onSaveRequest()
                 }
         )
 
@@ -249,7 +257,7 @@ fun RequestInputScreen(
 fun RequestInputScreenPreview() {
     RequestInputScreen(
         onSendRequest = {},
-        onSaveCollection = {
+        onSaveRequest = {
 
         }
     )
