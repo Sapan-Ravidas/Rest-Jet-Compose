@@ -35,7 +35,7 @@ import com.sapan.restjet.viewmodel.RequestResponseViewModel
 @Composable
 fun ResponseScreen(
     viewModel: RequestResponseViewModel = hiltViewModel(),
-    navController: NavController,
+    navController: NavController?,
     modifier: Modifier = Modifier
 ) {
     val responseState by viewModel.responseState.collectAsStateWithLifecycle()
@@ -51,7 +51,7 @@ fun ResponseScreen(
 
     BackHandler {
         viewModel.clearResponse()
-        navController.popBackStack()
+        navController?.popBackStack()
     }
 
     Column(

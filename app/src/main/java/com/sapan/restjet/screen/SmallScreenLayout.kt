@@ -1,4 +1,4 @@
-package com.sapan.restjet
+package com.sapan.restjet.screen
 
 import android.text.TextUtils
 import androidx.compose.foundation.layout.padding
@@ -14,7 +14,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -23,55 +22,72 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.sapan.restjet.data.SpeedDial
-import com.sapan.restjet.screen.CollectionScreen
-import com.sapan.restjet.screen.KeyValueInputScreen
-import com.sapan.restjet.screen.LargeScreenLayout
-import com.sapan.restjet.screen.PopupDialog
-import com.sapan.restjet.screen.RequestInputScreen
-import com.sapan.restjet.screen.ResponseScreen
-import com.sapan.restjet.screen.Route
-import com.sapan.restjet.screen.SavedRequestDrawer
-import com.sapan.restjet.screen.SmallScreenLayout
 import com.sapan.restjet.ui.compose.AppBar
 import com.sapan.restjet.ui.compose.BottomNavigationBar
-import com.sapan.restjet.ui.compose.ScreenSize
 import com.sapan.restjet.ui.compose.SpeedDialFab
-import com.sapan.restjet.ui.compose.getScreenSize
 import com.sapan.restjet.viewmodel.CollectionViewModel
 import com.sapan.restjet.viewmodel.RequestResponseViewModel
 import kotlinx.coroutines.launch
 
 @Composable
-fun RestJetApp(
+fun SmallScreenLayout(
     requestResponseViewModel: RequestResponseViewModel = hiltViewModel(),
     collectionViewModel: CollectionViewModel = hiltViewModel()
 ) {
-    /**
-     * Apdaptive UI
-     */
-    val screenSize = getScreenSize()
 
-    when (screenSize) {
-        ScreenSize.SMALL -> SmallScreenLayout(
-            requestResponseViewModel = requestResponseViewModel,
-            collectionViewModel = collectionViewModel
-        )
-        else -> LargeScreenLayout(
-            requestResponseViewModel = requestResponseViewModel,
-            collectionViewModel = collectionViewModel
-        )
+    /**
+     * NavController and NavStack
+     */
+    val navController = rememberNavController()
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRouteString = navBackStackEntry?.destination?.route ?: Route.Home().route
+
+    val currentRoute = when {
+        currentRouteString.startsWith("Home/") -> {
+            val title = navBackStackEntry?.arguments?.getString("title") ?: "Rest Jet"
+            Route.Home(title)
+        }
+        currentRouteString == Route.Response.route -> Route.Response
+        currentRouteString == Route.Collection.route -> Route.Collection
+        else -> Route.Home()
     }
 
-
+    /**
+     * show ui
+     */
+    var showCollectionDialog by rememberSaveable { mutableStateOf(false) }
+    var drawerState by remember { mutableStateOf(DrawerState(DrawerValue.Closed)) }
+    var showDialogToSaveFile by rememberSaveable { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
 
     /**
+     * Fab Button
+     */
+    val fabSpeedDialCollectionScreen = listOf<SpeedDial>(
+        SpeedDial("+ Collection") {
+            showCollectionDialog = true
+        }
+    )
 
+    val fabSpeedDialHomeScreen = listOf<SpeedDial>(
+        SpeedDial("+ Request") {
+            navController.navigate(Route.Home().route)
+        },
+        SpeedDial("+ Collection") {
+            showCollectionDialog = true
+        }
+    )
+
+    /**
+     * drawer state
+     */
     LaunchedEffect(drawerState.currentValue) {
         if (drawerState.isOpen) {
             val filename = navBackStackEntry?.arguments?.getString("title")
             collectionViewModel.loadSavedRequests(filename)
         }
     }
+
 
     SavedRequestDrawer(
         drawerState = drawerState,
@@ -189,12 +205,5 @@ fun RestJetApp(
                 )
             }
         }
-    } */
-
-}
-
-@Preview(showBackground = true)
-@Composable
-fun RestJetAppPreview() {
-    RestJetApp()
+    }
 }
